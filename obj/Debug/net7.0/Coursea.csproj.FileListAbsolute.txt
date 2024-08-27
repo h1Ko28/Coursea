@@ -92,6 +92,6 @@ D:\Coursea\Coursea\bin\Debug\net7.0\MailKit.dll
 D:\Coursea\Coursea\bin\Debug\net7.0\MimeKit.dll
 D:\Coursea\Coursea\bin\Debug\net7.0\NETCore.MailKit.dll
 D:\Coursea\Coursea\bin\Debug\net7.0\BouncyCastle.Crypto.dll
-D:\Coursea\Coursea\bin\Debug\net7.0\MailService.dll
-D:\Coursea\Coursea\bin\Debug\net7.0\MailService.pdb
 D:\Coursea\Coursea\bin\Debug\net7.0\AutoMapper.dll
+D:\Coursea\Coursea\bin\Debug\net7.0\EmailManagement.dll
+D:\Coursea\Coursea\bin\Debug\net7.0\EmailManagement.pdb

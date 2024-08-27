@@ -1,37 +1,37 @@
-﻿using AutoMapper;
-using Coursea.Data;
+﻿using Coursea.Data;
 using Coursea.Dto.Account;
 using Coursea.Interfaces;
 using Coursea.Models;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Rewrite;
-using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using EmailManagement.Services;
+using EmailManagement.Models;
 
 namespace Coursea.Controllers
 {
-    public class AccountController : BaseController
+    [Route("api/[controller]")]
+    [ApiController]
+    public class AccountController : ControllerBase
     {
         private readonly UserManager<User> _userManager;
         private readonly ITokenService _tokenService;
         private readonly SignInManager<User> _signInManager;
         private readonly DataContext _dataContext;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IEmailService _emailService;
 
         public AccountController(UserManager<User> userManager, ITokenService tokenService, 
-            SignInManager<User> signInManager, DataContext dataContext, RoleManager<IdentityRole> roleManager)
+            SignInManager<User> signInManager, DataContext dataContext, 
+            RoleManager<IdentityRole> roleManager, IEmailService emailService)
         {
             _userManager = userManager;
             _tokenService = tokenService;
             _signInManager = signInManager;
             _dataContext = dataContext;
             _roleManager = roleManager;
+            _emailService = emailService;
         }
 
         [HttpPost("register")]
@@ -54,7 +54,7 @@ namespace Coursea.Controllers
 
             if (await _roleManager.RoleExistsAsync(registerDto.Role))
             {
-                var createdUser = await _userManager.CreateAsync(user, registerDto.Password);
+                var createdUser = await _userManager.CreateAsync(user, registerDto.Password!);
 
                 if (!createdUser.Succeeded)
                 {
@@ -68,7 +68,7 @@ namespace Coursea.Controllers
                     var instructor = new Instructor
                     {
                         UserId = user.Id,
-                        Professional_exp = registerDto.Exp
+                        Professional_exp = registerDto.Exp!
                     };
                     _dataContext.Instructors.Add(instructor);
                 }
@@ -81,9 +81,21 @@ namespace Coursea.Controllers
                     _dataContext.Students.Add(student);
                 }
                 await _dataContext.SaveChangesAsync();
+
+                var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                var confirmationLink = Url.Action(nameof(ConfirmEmail), "Account", new { token, email = user.Email }, Request.Scheme);
+                if (confirmationLink == null)
+                {
+                    throw new InvalidOperationException("Unable to generate confirmation link.");
+                }
+                var message = new Message(new string[] { user.Email! }, "Confirmation email link", confirmationLink!);
+                _emailService.SendEmail(message);
+
+                return StatusCode(StatusCodes.Status201Created,
+                    new Response { Status = "Success", Message = "User created & Email sent!" });
             }
-            return StatusCode(StatusCodes.Status201Created,
-                    new Response { Status = "Success", Message = "User created" });
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                    new Response { Status = "Error", Message = "Something went wrong!" });
         }
 
         [HttpPost("login")]
@@ -109,6 +121,21 @@ namespace Coursea.Controllers
                 return Ok(jwtToken);
             }
             return Unauthorized();
+        }
+
+        [HttpGet("confirmemail")]
+        public async Task<IActionResult> ConfirmEmail(string token, string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user != null)
+            {
+                var result = await _userManager.ConfirmEmailAsync(user, token);
+                if (result.Succeeded)
+                    return StatusCode(StatusCodes.Status200OK,
+                        new Response { Status = "Success", Message = "Email sent successfully!" });
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                        new Response { Status = "Error", Message = "Something went wrong!" });
         }
 
         [HttpDelete("delete")]
@@ -146,6 +173,14 @@ namespace Coursea.Controllers
                 return Ok("Update successfully");
             }
             return BadRequest("Error");
+        }
+
+        [HttpGet]
+        public IActionResult testMail()
+        {
+            var message = new Message(new string[] { "mautraunhatxom28@gmail.com" }, "test", "yolo");
+            _emailService.SendEmail(message);
+            return Ok("successful");
         }
     }
 }

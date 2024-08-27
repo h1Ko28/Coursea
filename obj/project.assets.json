@@ -1420,17 +1420,17 @@
           }
         }
       },
-      "MailService/1.0.0": {
+      "EmailManagement/1.0.0": {
         "type": "project",
         "framework": ".NETCoreApp,Version=v7.0",
         "dependencies": {
           "NETCore.MailKit": "2.1.0"
         },
         "compile": {
-          "bin/placeholder/MailService.dll": {}
+          "bin/placeholder/EmailManagement.dll": {}
         },
         "runtime": {
-          "bin/placeholder/MailService.dll": {}
+          "bin/placeholder/EmailManagement.dll": {}
         }
       }
     }
@@ -3943,16 +3943,16 @@
         "useSharedDesignerContext.txt"
       ]
     },
-    "MailService/1.0.0": {
+    "EmailManagement/1.0.0": {
       "type": "project",
-      "path": "../User.Management.Service/MailService.csproj",
-      "msbuildProject": "../User.Management.Service/MailService.csproj"
+      "path": "../EmailManagement/EmailManagement.csproj",
+      "msbuildProject": "../EmailManagement/EmailManagement.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net7.0": [
       "AutoMapper >= 13.0.1",
-      "MailService >= 1.0.0",
+      "EmailManagement >= 1.0.0",
       "Microsoft.AspNetCore.Authentication.JwtBearer >= 7.0.15",
       "Microsoft.AspNetCore.Identity.EntityFrameworkCore >= 7.0.15",
       "Microsoft.AspNetCore.Mvc.NewtonsoftJson >= 7.0.15",
@@ -3992,8 +3992,8 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "D:\\Coursea\\User.Management.Service\\MailService.csproj": {
-              "projectPath": "D:\\Coursea\\User.Management.Service\\MailService.csproj"
+            "D:\\Coursea\\EmailManagement\\EmailManagement.csproj": {
+              "projectPath": "D:\\Coursea\\EmailManagement\\EmailManagement.csproj"
             }
           }
         }

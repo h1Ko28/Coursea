@@ -29,8 +29,8 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "D:\\Coursea\\User.Management.Service\\MailService.csproj": {
-                "projectPath": "D:\\Coursea\\User.Management.Service\\MailService.csproj"
+              "D:\\Coursea\\EmailManagement\\EmailManagement.csproj": {
+                "projectPath": "D:\\Coursea\\EmailManagement\\EmailManagement.csproj"
               }
             }
           }
@@ -111,14 +111,14 @@
         }
       }
     },
-    "D:\\Coursea\\User.Management.Service\\MailService.csproj": {
+    "D:\\Coursea\\EmailManagement\\EmailManagement.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Coursea\\User.Management.Service\\MailService.csproj",
-        "projectName": "MailService",
-        "projectPath": "D:\\Coursea\\User.Management.Service\\MailService.csproj",
+        "projectUniqueName": "D:\\Coursea\\EmailManagement\\EmailManagement.csproj",
+        "projectName": "EmailManagement",
+        "projectPath": "D:\\Coursea\\EmailManagement\\EmailManagement.csproj",
         "packagesPath": "C:\\Users\\khoin\\.nuget\\packages\\",
-        "outputPath": "D:\\Coursea\\User.Management.Service\\obj\\",
+        "outputPath": "D:\\Coursea\\EmailManagement\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\khoin\\AppData\\Roaming\\NuGet\\NuGet.Config",

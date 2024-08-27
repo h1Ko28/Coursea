@@ -3,8 +3,8 @@ using Coursea.Helpers;
 using Coursea.Interfaces;
 using Coursea.Models;
 using Coursea.Services;
-using MailService.Service.Models;
-using MailService.Service.Services;
+using EmailManagement.Models;
+using EmailManagement.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -26,10 +26,12 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>{
     options.Password.RequireNonAlphanumeric = true;
     options.Password.RequireUppercase = true;
     options.Password.RequiredLength = 8;
-}).AddEntityFrameworkStores<DataContext>()
-.AddDefaultTokenProviders();
+    }).AddEntityFrameworkStores<DataContext>()
+    .AddDefaultTokenProviders();
 
-builder.Services.Configure<IdentityOptions>(options => options.SignIn.RequireConfirmedEmail = true);
+builder.Services.Configure<IdentityOptions>(options => 
+    options.SignIn.RequireConfirmedEmail = true
+    );
 
 builder.Services.AddAuthentication(options =>
 {
@@ -53,10 +55,12 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-var emailConfig = configuration.GetSection("EmailConfiguration").Get<EmailConfig>();
+var emailConfig = configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
 builder.Services.AddSingleton(emailConfig);
-builder.Services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
+
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+builder.Services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
