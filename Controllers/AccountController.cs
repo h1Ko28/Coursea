@@ -49,7 +49,8 @@ namespace Coursea.Controllers
             {
                 UserName = registerDto.UserName,
                 Email = registerDto.Email,
-                SecurityStamp = Guid.NewGuid().ToString()
+                SecurityStamp = Guid.NewGuid().ToString(),
+                TwoFactorEnabled = true
             };
 
             if (await _roleManager.RoleExistsAsync(registerDto.Role))
@@ -99,43 +100,70 @@ namespace Coursea.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDto loginDto)
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             var user = await _userManager.FindByNameAsync(loginDto.Username);
-            var password = await _userManager.CheckPasswordAsync(user, loginDto.Password);
 
-            if (user != null && password)
+
+            if (user!.TwoFactorEnabled)
+            {
+                await _signInManager.SignOutAsync();
+                await _signInManager.PasswordSignInAsync(user, loginDto.Password, false, true);
+
+                var otp = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
+                var message = new Message(new string[] { user.Email! }, "OTP Confirmation", otp!);
+                _emailService.SendEmail(message);
+                return StatusCode(StatusCodes.Status200OK,
+                    new Response { Status = "Success", Message = "We have sent an OTP to your email!" });
+            }
+            if (user != null && await _userManager.CheckPasswordAsync(user, loginDto.Password))
             {
                 var claims = new List<Claim>
-                {
+                    {
                     new Claim(ClaimTypes.NameIdentifier, user.Id),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-                };
+                    };
                 var userRole = await _userManager.GetRolesAsync(user);
                 foreach (var role in userRole)
                 {
                     claims.Add(new Claim(ClaimTypes.Role, role));
                 }
-
-                var jwtToken = _tokenService.CreateToken(claims);
-                return Ok(jwtToken);
+                return StatusCode(StatusCodes.Status200OK,
+                    new Response { Status = "Success", Message = "Login Successfully" });
             }
             return Unauthorized();
         }
 
-        [HttpGet("confirmemail")]
-        public async Task<IActionResult> ConfirmEmail(string token, string email)
+        [HttpPost("login-2f")]
+        public async Task<IActionResult> LoginWith2F(string otp, string userName)
         {
-            var user = await _userManager.FindByEmailAsync(email);
-            if (user != null)
+            var user = await _userManager.FindByNameAsync(userName);
+            var result = await _signInManager.TwoFactorSignInAsync("Email", otp, false, false);
+
+            if (result.Succeeded)
             {
-                var result = await _userManager.ConfirmEmailAsync(user, token);
-                if (result.Succeeded)
-                    return StatusCode(StatusCodes.Status200OK,
-                        new Response { Status = "Success", Message = "Email sent successfully!" });
+                if (user != null)
+                {
+                    var claims = new List<Claim>
+                    {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                    };
+                    var userRole = await _userManager.GetRolesAsync(user);
+                    foreach (var role in userRole)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, role));
+                    }
+
+                    var jwtToken = _tokenService.CreateToken(claims);
+
+                    return Ok(new
+                    {
+                        token = jwtToken
+                    });
+                }
             }
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                        new Response { Status = "Error", Message = "Something went wrong!" });
+            return Unauthorized(result.Succeeded);
         }
 
         [HttpDelete("delete")]
@@ -176,11 +204,19 @@ namespace Coursea.Controllers
         }
 
         [HttpGet]
-        public IActionResult testMail()
+        public async Task<IActionResult> ConfirmEmail(string token, string email)
         {
-            var message = new Message(new string[] { "mautraunhatxom28@gmail.com" }, "test", "yolo");
-            _emailService.SendEmail(message);
-            return Ok("successful");
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user != null)
+            {
+                var result = await _userManager.ConfirmEmailAsync(user, token);
+                if (result.Succeeded)
+                    return StatusCode(StatusCodes.Status200OK,
+                        new Response { Status = "Success", Message = "Email sent successfully!" });
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                        new Response { Status = "Error", Message = "Something went wrong!" });
         }
+
     }
 }
