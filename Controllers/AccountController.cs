@@ -8,6 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using EmailManagement.Services;
 using EmailManagement.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Coursea.Controllers
 {
@@ -216,6 +217,52 @@ namespace Coursea.Controllers
             }
             return StatusCode(StatusCodes.Status500InternalServerError,
                         new Response { Status = "Error", Message = "Something went wrong!" });
+        }
+        [HttpPost("forget-password")]
+        public async Task<IActionResult> ForgotPassword(string userName)
+        {
+            var user = await _userManager.FindByNameAsync(userName);
+            if (user == null)
+            {
+                return BadRequest("This user is not exist!");
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var forgotPasswordLink = Url.Action(nameof(ResetPassword), "Account", new { token, email = user.Email }, Request.Scheme);
+            var message = new Message(new string[] { user.Email! }, "Reset password email link", forgotPasswordLink);
+            _emailService.SendEmail(message);
+
+            return StatusCode(StatusCodes.Status200OK,
+                new Response { Status = "Success", Message = "Password change request is sent to you email successfully"});
+        }
+
+        [HttpGet("reset-password")]
+        public IActionResult ResetPassword(string token, string email)
+        {
+            var model = new ResetPassword
+            {
+                Token = token,
+                Email = email
+            };
+            return Ok(new { model });
+        }
+        [AllowAnonymous]
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPassword resetPassword)
+        {
+            var user = await _userManager.FindByEmailAsync(resetPassword.Email);
+            if (user != null)
+            {
+                var changePassword = await _userManager.ResetPasswordAsync(user, resetPassword.Token, resetPassword.Password);
+                if (!changePassword.Succeeded)
+                {
+                    return BadRequest("Some thing went wrong!");
+                }
+                return StatusCode(StatusCodes.Status200OK,
+                    new Response { Status = "Success", Message = "Password change request is sent to you email successfully" });
+            }
+
+            return BadRequest("This user is not exist!");
         }
 
     }
